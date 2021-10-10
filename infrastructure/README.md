@@ -132,6 +132,13 @@ docker system prune -a
 --> Plotly  
 --> Apache Spark  
 
+```
+pip install gdown
+```
+
+Download the python whl with tensorflow:
+gdown https://drive.google.com/file/d/189ntAHoCo1cq2JEZQeBCb0ijrKRomKK0/view?usp=sharing
+
 Dockerfile:  
 
 <span style="color:red"> Need to mount volume `$PWD:/mnt` where the tensorflow whl is located</span>.
