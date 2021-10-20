@@ -111,15 +111,11 @@ cd /tmp  # don't import from source directory
 python -c "import tensorflow as tf; print(\"Num GPUs Available: \", len(tf.config.list_physical_devices('GPU')))"
 ```
 
-Name of the whl file:
+*Name of the whl file:*
 ```
 tensorflow-2.8.0-cp38-cp38-linux_x86_64.whl
 ```
 
-clean docker environment (PRUNE WILL DELETE ALL IMAGES):
-```
-docker system prune -a
-```
 
 ### 1.1.2. Build DS Jupyter Container
 
@@ -130,51 +126,115 @@ docker system prune -a
 --> Neo4J python  libraries  
 --> Boto3  
 --> Plotly  
---> Apache Spark  
 
 <span style="color:red"> Need to mount volume `$PWD:/mnt` where the tensorflow whl is located</span>.
 
-```rb
-# Dockerfile
+You can find the complete Dockerfile in `infrastructure/data-science/Dockerfile`  
 
-FROM tensorflow/tensorflow:devel-gpu AS tf_build
+Use the latest gpu enabled tensorflow
+```
+FROM tensorflow/tensorflow:devel-gpu AS tf_build # 
 LABEL authors="zenpanik"
+```
+
+Uninstall tensorflow (if installed) and install the package built in previous step. Then test it
+```
 RUN chown $HOST_PERMS /mnt/tensorflow-2.8.0-cp38-cp38-linux_x86_64.whl
 RUN pip uninstall tensorflow  # remove current version
 
 RUN pip install /mnt/tensorflow-2.8.0-cp38-cp38-linux_x86_64.whl
 RUN cd /tmp  # don't import from source directory
 RUN python -c "import tensorflow as tf; print(\"Num GPUs Available: \", len(tf.config.list_physical_devices('GPU')))"
+```
 
+Next install packages from requirements.txt
+```
 FROM tf_build AS jupyter
-ARG NB_USER="zenpanik"
-ARG NB_UID="1000"
-ARG NB_GID="100"
 USER root
-RUN pip install --no-cache-dir jupyterlab
-RUN pip install --no-cache-dir jupyterlab-drawio
-RUN pip install --no-cache-dir ipyleaflet "plotly>=4.14.3" "ipywidgets>=7.5"
-
-EXPOSE 8888
+RUN pip install --no-cache-dir -r /mnt/requirements.txt 
 
 # Configure container startup
-USER ${NB_UID}
 CMD jupyter lab
 ```
 
-
-Then build the container image using docker build command:
-
+After we have specified all the steps required we need to build the image `using docker` build command:
 ```
-docker run --gpus all -it -w /tensorflow -v $PWD:/mnt -e HOST_PERMS="$(id -u):$(id -g)" \
-    tensorflow/tensorflow:devel-gpu bash
-
+cd infrastructure/data-science
+docker build --volume $PWD:/mnt -e HOST_PERMS="$(id -u):$(id -g)" .
 ```
 
+## 1.2. Build MLflow Server Container
+
+This one is very simple:  
+Use python 3.8 as base:  
+```
+FROM python:3.8
+ARG HOST_PERMS=1000:1000
+```
+Then install `requirements.txt` using pip:  
+```
+COPY requirements.txt /mnt
+RUN chown $HOST_PERMS /mnt/requirements.txt
+RUN pip install --no-cache-dir -r /mnt/requirements.txt 
+```
+
+## 1.3. Postgres Database and PG admin
+
+Here I am using the bitnami postgresql image:
+```
+bitnami/postgresql:latest
+```
+
+And 
+```
+dpage/pgadmin4
+```
+
+See docker-compose for more details about this deployment
+
+## 1.4. minio (Local S3 storage)
+I am using the official latest minio image:
+
+```
+minio/minio:latest
+```
+
+## 1.5. Neo4J graph database
+official community edition image:
+```
+neo4j:4.2.5-community
+```
 
 
 ## All services
-I am using docker compose to configure all services and their dependencies. Then this docker-compose yaml file can be tranformed to ECS compose or Docker Swarm for production environment if needed.
+In order to make all of the services above work and have network access to each other I am using docker-compose. All services are in the same network - `postgres`.  
+I will point out only some of the important environment variables here:
+
+### AWS access keys
+```
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY
+```
+
+To obtain the correct access key id and secret key you need to deploy the whole stack once. Then go in the minio UI and use the MINIO_ROOT_PASSWORD & MINIO_ROOT_USER to login. After that you need to create a bucket and pair of key id and secret key. You can then update the .env file with these values.
+
+### Volumes
+You need to specify folders where to store:
+- postgres data
+- minio (S3) data
+- datasets and jupyter notebooks (Data Science data)
+- Neo4J data
 
 
-## 
+
+
+*Notes*:
+
+clean docker environment (PRUNE WILL DELETE ALL IMAGES):
+```
+docker system prune -a
+```
+
+# 2. Scheduler [Local Automation Environment]
+
+
