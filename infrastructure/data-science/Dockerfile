@@ -20,4 +20,3 @@ RUN pip install --no-cache-dir -r /mnt/requirements.txt
 # Configure container startup
 CMD jupyter lab
 
-

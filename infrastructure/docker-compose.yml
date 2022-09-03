@@ -3,14 +3,15 @@ version: '3.5'
 services:
   postgres:
     container_name: pg_container
-    image: bitnami/postgresql:latest
+    image: postgres:12-bullseye
+    platform: linux/arm64/v8
     environment:
       POSTGRES_USER: ${PG_USER}
       POSTGRES_PASSWORD: ${PG_PASSWORD}
       POSTGRES_DB: ${PG_DATABASE}
       PGDATA: ${PG_DATA}
     volumes:
-      - "/home/dell/Data/postgres-mlflow-data/:${PG_DATA}"
+      - "./Data/postgres-mlflow-data/:${PG_DATA}"
     ports:
       - "${PG_PORT}:5432"
     networks:
@@ -26,7 +27,7 @@ services:
       - "PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}"
       - "PGADMIN_PORT=${PGADMIN_PORT}"
     volumes:
-      - "/home/dell/Data/pgadmin-data/:/root/.pgadmin"
+      - "./Data/pgadmin-data/:/root/.pgadmin"
     ports:
       - "${PGADMIN_PORT}:80"
     depends_on:
@@ -39,13 +40,14 @@ services:
   data_science:
     container_name: data_science_container
     image: ds:tf_latest
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              device_ids: ['0']
-              capabilities: [gpu]
+    working_dir: /jupyter
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           device_ids: ['0']
+    #           capabilities: [gpu]
     environment:
       JUPYTER_ENABLE_LAB: "yes"
       CHOWN_HOME: "yes"
@@ -56,7 +58,7 @@ services:
       MLFLOW_TRACKING_URI: "http://mlflow:${MLFLOW_PORT}"
       MLFLOW_S3_ENDPOINT_URL: "http://minio:${MINIO_PORT}"
     volumes:
-      - ${DS_DATA}/jupyter-data:/jupyter
+      - ./Data/jupyter-data:/jupyter
     ports:
       - "${JUPYTER_PORT}:8888"
     networks:
@@ -73,9 +75,8 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
       MLFLOW_S3_ENDPOINT_URL: "http://minio:${MINIO_PORT}"
-      
     volumes:
-      - ${DS_DATA}/mlflow-data:/data
+      - ./Data/mlflow-data:/data
     ports:
       - "${MLFLOW_PORT}:5000"
     depends_on:
@@ -88,13 +89,15 @@ services:
       - sh    # (sh allows for var substitution of BACKEND and ARTIFACTS)
       - -c
       - mlflow server 
-          --port ${MLFLOW_PORT} 
-          --host ${MLFLOW_HOST}
           --backend-store-uri ${MLFLOW_BACKEND_STORE_URI}
           --default-artifact-root ${MLFLOW_ARTIFACTS_ROOT_URI}
+          --host ${MLFLOW_HOST}
+          # --port ${MLFLOW_PORT}
+          # --gunicorn-opts "--timeout 180"
   minio:
     container_name: minio_container
     image: 'minio/minio:latest'
+    platform: linux/arm64
     environment:
       MINIO_ACCESS_KEY: ${AWS_ACCESS_KEY_ID}
       MINIO_SECRET_KEY: ${AWS_SECRET_ACCESS_KEY}
@@ -102,18 +105,20 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_PORT: ${MINIO_PORT}
     volumes:
-      - ${DS_DATA}/minio-data:/data
+      - ./Data/minio-data:/data
     ports:
       - "${MINIO_PORT}:9000"
+      - "9001:9001"
     networks:
       - postgres
     hostname: minio
     restart: unless-stopped
-    command: server /data --console-address ":9001"
+    command: server /data --console-address ":9001" 
 
   neo4j:
     container_name: neo4j_container
-    image: neo4j:4.2.5-community
+    image: neo4j:community
+    platform: linux/arm64/v8
     environment:
       - "NEO4J_ACCEPT_LICENSE_AGREEMENT=yes"
       - "NEO4J_AUTH=neo4j/neo"
@@ -122,7 +127,7 @@ services:
       - "NEO4J_dbms_security_procedures_whitelist=apoc.*,algo.*,gds.*,n10s.*"
     volumes:
       - ./plugins:/plugins
-      - ${DS_DATA}/neo4j-data/:/import
+      - ./Data/neo4j-data/:/import
     ports:
       - "7474:7474"
       - "7687:7687"
