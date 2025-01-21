@@ -5,11 +5,11 @@ For Data Collection and ML experiments I am using one of my old mining workstati
 Workstation specification:
 
 Dell T7500 <br>
-CPU     :   Intel® Xeon(R) CPU X5650 @ 2.67GHz × 6 
-Memory  :   23.5 GB
-GPU     :   2x GTX 1080TI OC 11G
-Disk    :   256 GB SSD & 1TB HDD for storage
-OS      :   Ubuntu 18.04.6 LTS
+CPU     :   Intel® Xeon(R) CPU X5650 @ 2.67GHz × 6 <br>
+Memory  :   23.5 GB <br>
+GPU     :   2x GTX 1080TI OC 11G <br>
+Disk    :   256 GB SSD & 1TB HDD for storage <br>
+OS      :   Ubuntu 18.04.6 LTS <br>
 
 The Playground contains several services:
 1. Jupyter Lab with GPU support
@@ -18,6 +18,8 @@ The Playground contains several services:
 4. MinIO
 5. Airflow
 6. Neo4J Graph DB (Community edition)
+7. Pytorch Environment (New)
+8. Chroma (New)
 
 For Production I may want to replace docker engine with kubernetes so in 2. I will write several paragraphs on how to build production ready containers.
 
