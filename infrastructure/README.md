@@ -22,8 +22,49 @@ The Playground contains several services:
 For Production I may want to replace docker engine with kubernetes so in 2. I will write several paragraphs on how to build production ready containers.
 
 ## 1.1. Data Science 
+### 1.1.1. Build Pytorch container
+1. We need to download and install NVIDIA Drivers. If you are using ubuntu 24.04 or later nvidia drivers are automatically installed.
+2. Assume we already have docker >= v.19
+3. Now we need to install nvidia container toolkit (as I understand this is not always needed, but in my case it was ...)
+https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
+```
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+  && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+    sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+```
 
-### 1.1.1. Build Tensorflow from Source 
+```
+sudo apt-get update
+```
+
+```
+sudo apt-get install -y nvidia-container-toolkit
+```
+
+```
+sudo nvidia-ctk runtime configure --runtime=docker
+```
+
+```
+sudo systemctl restart docker
+```
+
+5. Then we can run a simple workload to make sure the container has access to GPUs
+https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/sample-workload.html
+
+```
+sudo docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi
+```
+
+6. If everthing is good now and we see the NVIDIA smi details then we are good to use nvidia torch containers. We can test it with
+```
+docker run --gpus all -it --rm nvcr.io/nvidia/pytorch:22.08-py3
+```
+
+7. The image we want to use in the environment is `nvcr.io/nvidia/pytorch:22.08-py3`
+
+### 1.1.2. Build Tensorflow from Source 
 The CPU of this machine is old and Tensorflow is not working out of the box (TF > 1.15 with GPU support) - missing AVX instructions. That is why we need to build TF from source.
 
 After couple unsuccessful trials to build TF on the host machine and move it to container, I decided to build it NVIDIA development container.
