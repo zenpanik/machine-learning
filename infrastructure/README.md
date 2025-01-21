@@ -4,7 +4,7 @@ For Data Collection and ML experiments I am using one of my old mining workstati
 
 Workstation specification:
 
-Dell T7500
+Dell T7500 <br>
 CPU     :   Intel® Xeon(R) CPU X5650 @ 2.67GHz × 6 
 Memory  :   23.5 GB
 GPU     :   2x GTX 1080TI OC 11G
