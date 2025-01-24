@@ -24,7 +24,7 @@ The Playground contains several services:
 For Production I may want to replace docker engine with kubernetes so in 2. I will write several paragraphs on how to build production ready containers.
 
 ## 1.1. Data Science 
-### 1.1.1. Build Pytorch container
+### 1.1.1. Setup NVIDIA env and Download Pytorch container
 1. We need to download and install NVIDIA Drivers. If you are using ubuntu 24.04 or later nvidia drivers are automatically installed.
 2. Assume we already have docker >= v.19
 3. Now we need to install nvidia container toolkit (as I understand this is not always needed, but in my case it was ...)
@@ -66,7 +66,31 @@ docker run --gpus all -it --rm nvcr.io/nvidia/pytorch:22.08-py3
 
 7. The image we want to use in the environment is `nvcr.io/nvidia/pytorch:22.08-py3`
 
-### 1.1.2. Build Tensorflow from Source 
+### 1.1.1. Setyp NVIDIA Nemotron container
+
+```
+$ docker login nvcr.io
+Username: $oauthtoken
+Password: nvapi-#diQMWBUUSSLSw4ZRLdofELB13gOawANWo60XTYy6rsAhadngw4oJ_wMvxFQFJ-EU
+```
+
+```
+export NGC_API_KEY=nvapi-#diQMWBUUSSLSw4ZRLdofELB13gOawANWo60XTYy6rsAhadngw4oJ_wMvxFQFJ-EU
+export LOCAL_NIM_CACHE=~/.cache/nim
+mkdir -p "$LOCAL_NIM_CACHE"
+docker run -it --rm \
+    --gpus all \
+    --shm-size=16GB \
+    -e NGC_API_KEY \
+    -v "$LOCAL_NIM_CACHE:/opt/nim/.cache" \
+    -u $(id -u) \
+    -p 8000:8000 \
+    nvcr.io/nim/meta/llama-3.1-8b-instruct:latest
+```
+
+
+
+### 1.1.3. Build Tensorflow from Source 
 The CPU of this machine is old and Tensorflow is not working out of the box (TF > 1.15 with GPU support) - missing AVX instructions. That is why we need to build TF from source.
 
 After couple unsuccessful trials to build TF on the host machine and move it to container, I decided to build it NVIDIA development container.
