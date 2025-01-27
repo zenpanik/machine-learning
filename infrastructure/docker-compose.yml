@@ -37,10 +37,10 @@ services:
     hostname: pgadmin
     restart: unless-stopped
   
-  data_science:
-    container_name: data_science_container
-    image: ds:tf_latest
-    working_dir: /jupyter
+  # data_science:
+    # container_name: data_science_container
+    # image: ds:tf_latest
+    # working_dir: /jupyter
     # deploy:
     #   resources:
     #     reservations:
@@ -48,6 +48,35 @@ services:
     #         - driver: nvidia
     #           device_ids: ['0']
     #           capabilities: [gpu]
+    # environment:
+      # JUPYTER_ENABLE_LAB: "yes"
+      # CHOWN_HOME: "yes"
+      # AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      # AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      # AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+      # AWS_S3_ENDPOINT: "http://minio:${MINIO_PORT}"
+      # MLFLOW_TRACKING_URI: "http://mlflow:${MLFLOW_PORT}"
+      # MLFLOW_S3_ENDPOINT_URL: "http://minio:${MINIO_PORT}"
+    # volumes:
+      # - ./Data/jupyter-data:/jupyter
+    # ports:
+      # - "${JUPYTER_PORT}:8888"
+    # networks:
+      # - postgres
+    # hostname: data_science
+    # restart: unless-stopped
+    # entrypoint: "jupyter lab --ip 0.0.0.0 --allow-root --NotebookApp.token='' --NotebookApp.password=''"
+  data_science2:
+    container_name: data_science_container2
+    image: nvcr.io/nvidia/pytorch:23.07-py3
+    working_dir: /jupyter
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0', ]
+              capabilities: [gpu]
     environment:
       JUPYTER_ENABLE_LAB: "yes"
       CHOWN_HOME: "yes"
