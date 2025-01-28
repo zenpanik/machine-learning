@@ -12,8 +12,57 @@ Downloading 23.07 <br>
 https://docs.nvidia.com/deeplearning/frameworks/pytorch-release-notes/rel-24-01.html <br>
 according to the docs it should be with cuda 12.1.1<br>
 
-Then we need to install unsloth for pythorch 23 and cuda 12.1:
+Then we need to install unsloth:
+- first check nvidia-smi
 ```
-pip install "unsloth[cu121-torch230] @ git+https://github.com/unslothai/unsloth.git"
+nvidia-smi
 ```
+```
++---------------------------------------------------------------------------------------+
+| NVIDIA-SMI 535.183.01             Driver Version: 535.183.01   CUDA Version: 12.2     |
+|-----------------------------------------+----------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |         Memory-Usage | GPU-Util  Compute M. |
+|                                         |                      |               MIG M. |
+|=========================================+======================+======================|
+|   0  NVIDIA GeForce GTX 1080        Off | 00000000:04:00.0 Off |                  N/A |
+|  0%   21C    P8               9W / 210W |     15MiB /  8192MiB |      0%      Default |
+|                                         |                      |                  N/A |
++-----------------------------------------+----------------------+----------------------+
+                                                                                         
++---------------------------------------------------------------------------------------+
+| Processes:                                                                            |
+|  GPU   GI   CI        PID   Type   Process name                            GPU Memory |
+|        ID   ID                                                             Usage      |
+|=======================================================================================|
++---------------------------------------------------------------------------------------+
+```
+
+- Then check cuda compiler driver version
+```
+nvcc --version
+```
+```
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2023 NVIDIA Corporation
+Built on Mon_Apr__3_17:16:06_PDT_2023
+Cuda compilation tools, release 12.1, V12.1.105
+Build cuda_12.1.r12.1/compiler.32688072_0
+```
+
+- Install latest setuptools
+```
+python -m pip install --upgrade pip wheel setuptools
+```
+
+- Install unsloth zoo (optional)
+```
+pip install unsloth_zoo
+```
+
+- Finally install unsloth
+```
+pip install "unsloth[cu121-torch240] @ git+https://github.com/unslothai/unsloth.git"
+```
+
 
